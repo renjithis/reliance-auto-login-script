@@ -37,7 +37,7 @@ reliance_logout_url='http://reliancebroadband.co.in/reliance/logout.do'
 user_agent_string='Mozilla/5.0 (Windows NT 6.1; U; ru; rv:5.0.1.6) Gecko/20110501 Firefox/5.0.1 Firefox/5.0.1'
 
 '''You don't normally have to edit anything below this line'''
-debug = True
+debug = False
 check_interval = 600
 
 def parse_args():
