@@ -51,7 +51,7 @@ def parse_args():
   parser.add_argument('--internet-off-test-string', dest='internet_off_test_string', help='If this string is found in the test URL\'s reply, we know that internet is not connected. Default: \'reliance\'', required=False)
   parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Enable verbose log printing', required=False)
   args = parser.parse_args()
-  print "Command line arguments =",args
+  #print "Command line arguments =",args
   return args
 
 def get_url(url, data=None, timeout=60, opener=None):
@@ -88,36 +88,36 @@ def is_internet_on(test_url, test_string):
     return False
   return False
 
-def internet_connect(username, password, portal_url, login_url):
+def internet_connect(username, password):
   '''try to connect to the internet'''
   if debug: print "Connecting to internet"
   try:
-    code, headers, html, cur_opener = get_url(portal_url, timeout=10)	# Why are we doing this?
+    code, headers, html, cur_opener = get_url(reliance_start_portal_url, timeout=10)	# Why are we doing this?
     if debug: print html
     login_data = urllib.urlencode({'userId' : username, 'password' : password, 'action' : 'doLoginSubmit'})
-    code, headers, html, cur_opener = get_url(login_url, data=login_data, opener=cur_opener)
+    code, headers, html, cur_opener = get_url(reliance_login_url, data=login_data, opener=cur_opener)
     if debug: print html
     return True
   except Exception as e:
     print 'Error connecting to internet :', e
     return False
   
-def internet_disconnect(logout_url):
+def internet_disconnect():
   '''try to disconnect from the internet'''
   if debug: print "Disconnecting from the internet"
   code, headers, html, cur_opener = get_url(reliance_login_url, timeout=10)
   if debug: print html
-  code, headers, html, cur_opener = get_url(logout_url, opener=cur_opener)
+  code, headers, html, cur_opener = get_url(reliance_logout_url, opener=cur_opener)
   if debug: print html
 
-def internet_keep_alive(test_url, test_string, username, password, portail_url, login_url):
+def internet_keep_alive():
   '''login and keep the connection live'''
   print "Verbose=",debug
   while True:
     if debug: print "Internet keepalive"
-    if not is_internet_on(test_url, test_string):
+    if not is_internet_on(internet_on_test_url, internet_off_test_string):
       if debug: print "Not connected"
-      while not internet_connect( username, password, portail_url, login_url):
+      while not internet_connect(username, password):
 	print "Not connected, retrying"
 	pass
     else:
@@ -127,11 +127,24 @@ def internet_keep_alive(test_url, test_string, username, password, portail_url, 
     time.sleep(check_interval)
 
 def main():
+  global username
+  global password
+  global internet_on_test_url
+  global internet_off_test_string
+  global reliance_start_portal_url
+  global reliance_login_url
+  global reliance_logout_url
+  global user_agent_string
+  global debug
+  global check_interval
+  
   args = parse_args()
   if args.verbose:
     debug=True
+  #else:
+    #debug=False
   if args.logout:
-    internet_disconnect(reliance_logout_url)
+    internet_disconnect()
     sys.exit(0)
   if not args.username:
     args.username=raw_input("Username: ")
@@ -154,7 +167,7 @@ def main():
   if debug: print "internet_on_test_url=",internet_on_test_url
   if debug: print "internet_off_test_string=",internet_off_test_string
   if args.login:
-    internet_connect(internet_on_test_url, internet_off_test_string)
+    internet_connect()
     keep_alive = False
   elif args.nokeepalive:
     keep_alive = False
@@ -163,7 +176,7 @@ def main():
   ''' default action without any arguments - keep alive'''
   if keep_alive:
     if debug: print "Starting keepalive"
-    internet_keep_alive(internet_on_test_url, internet_off_test_string, username, password, reliance_start_portal_url, reliance_login_url);
+    internet_keep_alive();
 
 if __name__ == '__main__':
   main()
